@@ -678,17 +678,28 @@ code.inline, .concepts code { font-family: ui-monospace, Consolas, monospace; fo
     },
     {
       id: "notebook", name: "NotebookLM 整理教材", tool: "notebook",
-      desc: "上傳講義或課文後，請 NotebookLM 只根據資料整理學習材料。",
+      desc: "上傳講義或課文後，請 NotebookLM 只根據資料整理學習材料，也可以直接做成學生能操作的互動網頁。",
       fields: [
         { id: "grade", type: "select", label: "給哪個年級", options: GRADES, value: "四年級", half: true },
-        { id: "purpose", type: "select", label: "要做什麼", options: ["複習重點", "學習單", "是非題自我檢測", "名詞解釋表", "親師座談家長問答", "上課用的提問"], value: "學習單", half: true },
+        { id: "purpose", type: "select", label: "要做什麼", options: ["複習重點", "學習單", "是非題自我檢測", "名詞解釋表", "親師座談家長問答", "上課用的提問", "互動網頁"], value: "學習單", half: true, rerender: true },
         { id: "count", type: "number", label: "題數或條數", value: 8, half: true },
-        { id: "style", type: "checks", label: "呈現方式", items: ["條列式", "用表格", "附答案", "標出資料出處", "加入生活例子"], value: ["條列式", "附答案"] },
+        { id: "siteKind", type: "select", label: "網頁類型", options: ["重點複習網頁（分段重點＋小測驗）", "闖關測驗（答對才能進下一關）", "互動時間軸（點年代看事件）", "名詞翻牌卡（正面名詞、背面解釋）", "圖解說明（點圖上的部位看說明）"], value: "重點複習網頁（分段重點＋小測驗）", show: function (v) { return v.purpose === "互動網頁"; } },
+        { id: "siteFeatures", type: "checks", label: "網頁功能", items: ["答題後馬上顯示對錯和說明", "顯示得分與進度", "大字大按鈕（平板好點）", "可以重新開始", "標出資料出處", "畫面色彩柔和、活潑"], value: ["答題後馬上顯示對錯和說明", "顯示得分與進度", "大字大按鈕（平板好點）", "可以重新開始"], show: function (v) { return v.purpose === "互動網頁"; } },
+        { id: "style", type: "checks", label: "呈現方式", items: ["條列式", "用表格", "附答案", "標出資料出處", "加入生活例子"], value: ["條列式", "附答案"], show: function (v) { return v.purpose !== "互動網頁"; } },
         { id: "more", type: "textarea", label: "其他要求（可留空）", value: "", hint: "例如：最後一題請設計成開放式問題。" }
       ],
       build: function (v) {
         var L = [];
         var audience = v.purpose === "親師座談家長問答" ? "家長" : "國小" + v.grade + "學生";
+        if (v.purpose === "互動網頁") {
+          L.push("幫我生成網頁：請只根據我上傳的資料，為" + audience + "做一個「" + v.siteKind + "」。");
+          L.push("網頁裡放約 " + v.count + " 題練習題，題目、答案和說明都要來自資料內容。");
+          L.push("用字要符合" + audience + "能理解的程度，全部使用繁體中文。");
+          if (v.siteFeatures.length) L.push("網頁功能：" + v.siteFeatures.join("、") + "。");
+          L.push("資料中沒有提到的內容，請不要自行補充。");
+          if (v.more.trim()) L.push(v.more.trim());
+          return L.join("\n");
+        }
         L.push("請只根據我上傳的資料，為" + audience + "製作一份「" + v.purpose + "」，共約 " + v.count + (v.purpose === "名詞解釋表" || v.purpose === "複習重點" ? " 條" : " 題") + "。");
         L.push("用字要符合" + audience + "能理解的程度。");
         if (v.style.length) L.push("呈現方式：" + v.style.join("、") + "。");
@@ -696,7 +707,14 @@ code.inline, .concepts code { font-family: ui-monospace, Consolas, monospace; fo
         if (v.more.trim()) L.push(v.more.trim());
         return L.join("\n");
       },
-      tips: ["先在 NotebookLM 新增筆記本，並上傳講義、課文 PDF 或 Google 文件，再貼上這段。", "想要聲音版本，可以在右側工作室使用「語音摘要」。"]
+      tips: function (v) {
+        if (v.purpose === "互動網頁") return [
+          "先在 NotebookLM（現稱 Gemini Notebook）新增筆記本並上傳教材，再把這段貼到對話框。開頭的「幫我生成網頁」會啟動網頁生成，英文介面可改成「make me a site」。",
+          "做好後點「在新分頁中開啟」（Open in a new tab）試用；想改哪裡，直接在對話裡說，例如「第 3 題的說明再簡單一點」。",
+          "給學生用之前，請自己從頭操作一次，確認每題答案和說明都正確。"
+        ];
+        return ["先在 NotebookLM 新增筆記本，並上傳講義、課文 PDF 或 Google 文件，再貼上這段。", "想要聲音版本，可以在右側工作室使用「語音摘要」。"];
+      }
     },
     {
       id: "canva", name: "Canva 班級素材", tool: "canva",
@@ -766,6 +784,7 @@ code.inline, .concepts code { font-family: ui-monospace, Consolas, monospace; fo
     var halfBuf = [];
     function flushHalf() { if (halfBuf.length) { html += '<div class="row">' + halfBuf.join("") + '</div>'; halfBuf = []; } }
     current.fields.forEach(function (f) {
+      if (f.show && !f.show(v)) return;
       var fid = current.id + "-" + f.id;
       var h = "";
       if (f.type === "select") {
@@ -793,6 +812,8 @@ code.inline, .concepts code { font-family: ui-monospace, Consolas, monospace; fo
   function readForm() {
     var v = stateFor(current);
     current.fields.forEach(function (f) {
+      if (f.show && !f.show(v)) return;
+      if (f.type === "checks" && !formEl.querySelector('input[data-f="' + f.id + '"]')) return;
       if (f.type === "checks") {
         v[f.id] = Array.prototype.slice.call(formEl.querySelectorAll('input[data-f="' + f.id + '"]:checked')).map(function (el) { return el.value; });
       } else if (f.type === "qtypes") {
@@ -843,7 +864,9 @@ code.inline, .concepts code { font-family: ui-monospace, Consolas, monospace; fo
   formEl.addEventListener("input", update);
   formEl.addEventListener("change", function (e) {
     update();
-    if (e.target && e.target.dataset && e.target.dataset.f === "subject" && current.id === "quiz") {
+    var changed = e.target && e.target.dataset && e.target.dataset.f;
+    var rer = changed && current.fields.some(function (f) { return f.id === changed && f.rerender; });
+    if (rer || (changed === "subject" && current.id === "quiz")) {
       var focusId = e.target.id; renderForm(); update();
       var el = document.getElementById(focusId); if (el) el.focus();
     }
