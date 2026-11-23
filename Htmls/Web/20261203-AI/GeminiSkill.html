@@ -1,0 +1,1075 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Gemini 技能教學助手</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=LXGW+WenKai+TC:wght@400;700&display=swap">
+<style>
+/* Layout: header band, scenario chips, then a form column beside a sticky "prompt card" that updates as teachers fill the form. */
+:root {
+  --bg: #F6F4EE;
+  --surface: #FFFFFF;
+  --ink: #1E2B33;
+  --muted: #56636B;
+  --line: #DDD8CC;
+  --brand: #1F3A4D;
+  --brand-ink: #FAF7F0;
+  --accent: #B5561F;
+  --accent-soft: #FBE8DA;
+  --ok: #2E6E5E;
+  --code-bg: #1F3A4D;
+  --code-ink: #F3EFE6;
+  --code-mark: #F2A65A;
+  --font-display: "LXGW WenKai TC", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141B20; --surface: #1C252C; --ink: #E9E5DC; --muted: #A4AEB4; --line: #33414A;
+    --brand: #9CC3D6; --brand-ink: #10181D; --accent: #F2A65A; --accent-soft: #3A2A1E; --ok: #7CC2AE;
+    --code-bg: #0E1418; --code-ink: #EDE8DE; --code-mark: #F2A65A; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141B20; --surface: #1C252C; --ink: #E9E5DC; --muted: #A4AEB4; --line: #33414A;
+  --brand: #9CC3D6; --brand-ink: #10181D; --accent: #F2A65A; --accent-soft: #3A2A1E; --ok: #7CC2AE;
+  --code-bg: #0E1418; --code-ink: #EDE8DE; --code-mark: #F2A65A; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 24px; }
+header { display: flex; flex-direction: column; gap: 6px; }
+.eyebrow { font-size: 13px; letter-spacing: 0.12em; color: var(--accent); font-weight: 700; }
+h1 { font-family: var(--font-display); font-size: clamp(28px, 4vw, 40px); font-weight: 700; color: var(--brand); margin: 0; text-wrap: balance; line-height: 1.25; }
+.lede { color: var(--muted); margin: 0; max-width: 60ch; }
+.privacy { display: flex; gap: 10px; align-items: flex-start; background: var(--accent-soft); border-radius: 10px; padding: 12px 16px; font-size: 15px; }
+.privacy b { color: var(--accent); white-space: nowrap; }
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tab { font: inherit; font-size: 15px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 16px; border-radius: 999px; cursor: pointer; display: flex; gap: 8px; align-items: center; }
+.tab .n { font-size: 12px; color: var(--muted); }
+.tab[aria-selected="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.tab[aria-selected="true"] .n { color: var(--brand-ink); opacity: 0.8; }
+.tab:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.panel h2 { font-family: var(--font-display); font-size: 24px; margin: 0; color: var(--brand); }
+.panel .desc { margin: -10px 0 0; color: var(--muted); font-size: 15px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > label, .field > .lbl { font-weight: 700; font-size: 15px; }
+.hint { font-size: 13px; color: var(--muted); }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; }
+input[type="text"], input[type="number"], select, textarea { font: inherit; font-size: 15px; color: var(--ink); background: var(--bg); border: 1.5px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; }
+textarea { resize: vertical; min-height: 96px; line-height: 1.6; }
+.checks { display: flex; flex-wrap: wrap; gap: 8px; }
+.check { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 15px; cursor: pointer; background: var(--bg); }
+.check:has(input:checked) { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--bg)); }
+.check input { accent-color: var(--ok); margin: 0; }
+.qtypes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.qtype { display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1.5px solid var(--line); border-radius: 8px; padding: 6px 10px; background: var(--bg); }
+.qtype input { width: 64px; text-align: center; font-variant-numeric: tabular-nums; }
+.output { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); }
+@media (max-width: 860px) { .output { position: static; } }
+.out-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.prompt { background: var(--code-bg); color: var(--code-ink); border-radius: 12px; padding: 20px; white-space: pre-wrap; word-break: break-word; font-family: var(--font-body); font-size: 15px; line-height: 1.75; max-height: 62vh; overflow: auto; margin: 0; }
+.prompt mark { background: transparent; color: var(--code-mark); font-weight: 700; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { font: inherit; font-weight: 700; font-size: 15px; border-radius: 10px; padding: 10px 18px; cursor: pointer; border: 1.5px solid var(--brand); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+:root[data-theme="dark"] .btn.primary { color: #1A1208; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #1A1208; } }
+.btn.ghost { background: transparent; color: var(--brand); }
+.status { font-size: 14px; color: var(--ok); font-weight: 700; }
+.tips { margin: 0; padding-left: 20px; color: var(--muted); font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.count { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { .tab, .check, .btn { transition: background 0.15s, border-color 0.15s; } }
+
+/* ===== 上方大分頁：提示詞產生器／Skill 重點講義／Skill 實作學習單（2026-11-23 併入 google_gemini_skill.html） ===== */
+:root { --warn: #9A5B00; --bad: #B3261E; }
+:root[data-theme="dark"] { --warn: #F2C26B; --bad: #F2A39C; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --warn: #F2C26B; --bad: #F2A39C; } }
+.topbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.views { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 14px; padding: 4px; }
+.vtab { font: inherit; font-size: 15px; font-weight: 700; border: 0; background: transparent; color: var(--muted); padding: 8px 16px; border-radius: 10px; cursor: pointer; }
+.vtab[aria-selected="true"] { background: var(--brand); color: var(--brand-ink); }
+.view { display: flex; flex-direction: column; gap: 24px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card h3 { font-family: var(--font-display); font-size: 21px; margin: 0; color: var(--brand); line-height: 1.35; }
+.card > p, .card .sub { margin: 0; color: var(--muted); font-size: 15px; }
+.kicker { font-size: 13px; letter-spacing: 0.08em; font-weight: 700; color: var(--accent); }
+.card-head { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: flex-end; }
+.ttl { display: flex; flex-direction: column; gap: 2px; }
+.hero { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+.hero h2 { font-family: var(--font-display); font-size: clamp(22px, 3vw, 30px); margin: 0; line-height: 1.35; text-wrap: balance; }
+.card.hero > p { margin: 0; color: inherit; opacity: 0.92; max-width: 70ch; font-size: 16px; }
+.hero code { background: color-mix(in srgb, var(--brand-ink) 18%, transparent); padding: 1px 6px; border-radius: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips span { font-size: 13px; padding: 2px 10px; border-radius: 999px; background: color-mix(in srgb, var(--brand-ink) 16%, transparent); }
+.goals { background: color-mix(in srgb, var(--brand-ink) 10%, transparent); border-radius: 12px; padding: 14px 16px; }
+.goals h3 { color: inherit; font-family: var(--font-body); font-size: 14px; letter-spacing: 0.08em; margin: 0 0 8px; }
+.goals ol { margin: 0; padding-left: 24px; display: flex; flex-direction: column; gap: 6px; }
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.stage { font: inherit; text-align: left; border: 2px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 12px; padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 4px; }
+.stage b { font-size: 16px; }
+.stage .tag { font-size: 12px; font-weight: 700; color: var(--accent); }
+.stage .hint { font-size: 13px; }
+.stage[data-active="true"] { border-color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--surface)); }
+.note-box { background: var(--bg); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; font-size: 15px; }
+.note-box strong { color: var(--brand); }
+.pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.pill { font: inherit; font-size: 14px; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+.pill[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
+table.concepts { width: 100%; min-width: 600px; border-collapse: collapse; font-size: 15px; }
+.concepts th { text-align: left; background: var(--bg); color: var(--muted); font-size: 13px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.concepts td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.concepts tr:last-child td { border-bottom: 0; }
+.concepts td:first-child { font-weight: 700; }
+.concepts td:nth-child(2) { color: var(--muted); }
+code.inline, .concepts code { font-family: ui-monospace, Consolas, monospace; font-size: 13px; background: var(--bg); border: 1px solid var(--line); padding: 0 5px; border-radius: 5px; }
+.good { color: var(--ok); }
+.myths { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.myth { font: inherit; text-align: left; border: 1.5px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 12px; padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; }
+.myth .q { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; }
+.myth .q span:last-child { flex: none; font-size: 13px; color: var(--accent); }
+.myth .a { border-top: 1px dashed var(--line); padding-top: 10px; font-size: 15px; }
+.myth .a strong { color: var(--ok); }
+.myth[aria-expanded="true"] { border-color: var(--accent); }
+.score { font-size: 14px; font-weight: 700; color: var(--brand); background: color-mix(in srgb, var(--brand) 10%, var(--surface)); border-radius: 999px; padding: 4px 12px; font-variant-numeric: tabular-nums; }
+.linkbtn { font: inherit; font-size: 14px; background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; }
+.qitem { border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.qitem .qt { font-weight: 700; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.qitem .lv { font-size: 12px; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 1px 8px; border-radius: 6px; }
+.opt { font: inherit; font-size: 15px; text-align: left; width: 100%; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 10px 14px; cursor: pointer; }
+.opt.is-ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 14%, var(--surface)); font-weight: 700; }
+.opt.is-bad { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--surface)); }
+.opt.is-dim { color: var(--muted); }
+.fb { border-radius: 10px; padding: 10px 14px; font-size: 15px; border: 1px solid; }
+.fb.ok { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 10%, var(--surface)); }
+.fb.warn { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); }
+.callout { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; background: var(--accent-soft); border-radius: 14px; padding: 18px 20px; }
+.callout b { display: block; font-size: 17px; }
+.num { display: inline-flex; width: 30px; height: 30px; flex: none; align-items: center; justify-content: center; border-radius: 8px; background: var(--brand); color: var(--brand-ink); font-weight: 700; font-size: 15px; }
+.h-num { display: flex; gap: 10px; align-items: center; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; border: 1.5px solid var(--line); border-radius: 10px; padding: 8px 12px; cursor: pointer; background: var(--bg); }
+.toggle input { accent-color: var(--accent); }
+.warm { border: 1px solid var(--line); background: var(--bg); border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.warm .top { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center; }
+.warm .top p { margin: 0; flex: 1 1 240px; }
+.warm .btns { display: flex; gap: 6px; }
+.choice { font: inherit; font-size: 14px; font-weight: 700; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.choice.is-ok { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.choice.is-bad { background: var(--bad); border-color: var(--bad); color: var(--surface); }
+.warm .res { margin: 0; font-size: 15px; }
+.warm .res.ok { color: var(--ok); } .warm .res.warn { color: var(--warn); }
+.builder { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .builder { grid-template-columns: minmax(0, 1fr); } }
+.builder .col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.lbl-row { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; }
+.badge { font-size: 12px; font-weight: 700; padding: 1px 9px; border-radius: 999px; background: var(--bg); color: var(--muted); border: 1px solid var(--line); white-space: nowrap; }
+.badge.b-ok { color: var(--ok); border-color: var(--ok); }
+.badge.b-warn { color: var(--warn); border-color: var(--warn); }
+.badge.b-bad { color: var(--bad); border-color: var(--bad); }
+.hint.ok { color: var(--ok); } .hint.warn { color: var(--warn); } .hint.bad { color: var(--bad); }
+.mono { font-family: ui-monospace, Consolas, monospace; }
+.presets { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn.small { font-size: 14px; padding: 6px 12px; }
+.key { border: 2px solid var(--accent); background: var(--accent-soft); }
+.key .item { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; font-size: 15px; }
+.key .item b { display: block; margin-bottom: 4px; color: var(--accent); }
+.key ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.sources { font-size: 14px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+.sources ul { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+.sources a { color: var(--brand); }
+@media print {
+  body { background: #fff; }
+  .views, .no-print, .actions { display: none !important; }
+  .output { position: static; }
+  .card, .panel { break-inside: avoid; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">教師 AI 研習</div>
+    <h1>用 Gemini 技能，<span style="display:inline-block">一鍵叫出你的教學助手</span></h1>
+    <p class="lede">學會把常用的備課指令存成 Gemini 技能（Skill），之後輸入 <code>@技能名稱</code> 就能叫出專屬教學助手。先看「Skill 重點講義」認識技能，再用「Skill 實作學習單」動手建立；「提示詞產生器」可以幫你組出好用的指令。</p>
+  </header>
+
+  <div class="topbar">
+    <div class="views" role="tablist" aria-label="頁面" id="views">
+      <button class="vtab" role="tab" type="button" id="vt-notes" data-view="notes" aria-controls="view-notes" aria-selected="true">Skill 重點講義</button>
+      <button class="vtab" role="tab" type="button" id="vt-worksheet" data-view="worksheet" aria-controls="view-worksheet" aria-selected="false">Skill 實作學習單</button>
+      <button class="vtab" role="tab" type="button" id="vt-prompt" data-view="prompt" aria-controls="view-prompt" aria-selected="false">提示詞產生器</button>
+    </div>
+    <button class="btn ghost small no-print" id="btn-print" type="button" hidden>列印這一頁</button>
+  </div>
+
+  <div class="privacy" role="note"><b>個資提醒</b><span>不要輸入學生全名、學號、家庭狀況或病史。用座號或「○○」代替，貼回成績系統時再填上名字。</span></div>
+
+  <!-- ==================== 頁面 1：提示詞產生器 ==================== -->
+  <div class="view" id="view-prompt" role="tabpanel" aria-labelledby="vt-prompt" hidden>
+  <div class="tabs" role="tablist" id="tabs"></div>
+
+  <div class="grid">
+    <section class="panel" id="form" aria-live="off"></section>
+    <section class="panel output" aria-label="產生的提示詞">
+      <div class="out-head">
+        <h2>你的提示詞</h2>
+        <span class="count" id="count"></span>
+      </div>
+      <pre class="prompt" id="prompt"></pre>
+      <div class="actions">
+        <button class="btn primary" id="copy" type="button">複製提示詞</button>
+        <a class="btn ghost" id="open" href="https://gemini.google.com" target="_blank" rel="noopener">開啟 Gemini</a>
+        <span class="status" id="status" role="status"></span>
+      </div>
+      <ul class="tips" id="tips"></ul>
+    </section>
+  </div>
+  </div>
+
+  <!-- ==================== 頁面 2：Skill 重點講義 ==================== -->
+  <section class="view" id="view-notes" role="tabpanel" aria-labelledby="vt-notes">
+    <div class="card hero">
+      <div class="chips"><span>AI 入門教師研習講義</span><span>依據 2026 Google 官方指南編製</span></div>
+      <h2>把重複備課指令存成「一覽表」，讓 Gemini 每次都照你的方式做</h2>
+      <p>Google 已將 <strong>Skills（技能）</strong>全面推向 Gemini 對話，並於 2026 年 11 月起逐步取代個人帳號的 Gems（Workspace 教育版預計於 2027 年 6 月轉換並自動遷移）。學會建立教學 Skill，以後只要輸入 <code>@技能名稱</code> 就能一秒呼叫專屬備課助手，不必每次重打落落長的提示詞。</p>
+      <div class="goals">
+        <h3>本單元學習目標</h3>
+        <ol>
+          <li>說出 Skill 與單次提示詞的差異，並正確判斷哪些備課工作適合建立技能。</li>
+          <li>依照 Google 官方命名與「第三人稱＋使用時機」規範，撰寫能準確觸發的技能說明。</li>
+          <li>運用輸出範本、檢查清單與防呆規則，親手完成第一個可重複使用的教學 Skill。</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="ttl"><span class="kicker">核心運作原理</span><h3>為什麼技能要寫成「一覽表」而非長篇手冊？</h3></div>
+        <span class="hint">點下方步驟，看 Gemini 的三階段載入流程</span>
+      </div>
+      <div class="stages" id="stage-cards">
+        <button type="button" class="stage" data-stage="0" data-active="true"><span class="tag">階段 1</span><b>確認技能是否相關</b><span class="hint">只先掃描「技能名稱」與「說明」，快速判斷現在需不需要動用它。</span></button>
+        <button type="button" class="stage" data-stage="1" data-active="false"><span class="tag">階段 2</span><b>詳閱完整指令操作</b><span class="hint">確定相關後，才載入完整步驟、格式範本與常見錯誤清單。</span></button>
+        <button type="button" class="stage" data-stage="2" data-active="false"><span class="tag">階段 3</span><b>視需要開啟附加檔案</b><span class="hint">若有附加純文字、PDF 或圖片範本，只在該步驟需要時才讀取。</span></button>
+      </div>
+      <div class="note-box" id="stage-detail" aria-live="polite"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="ttl"><span class="kicker">Google 官方撰寫規範</span><h3>核心概念一覽表</h3></div>
+        <div class="pills no-print" role="group" aria-label="篩選概念分類">
+          <button type="button" class="pill" data-filter="all" aria-pressed="true">全部</button>
+          <button type="button" class="pill" data-filter="trigger" aria-pressed="false">命名與觸發</button>
+          <button type="button" class="pill" data-filter="instruction" aria-pressed="false">指令與防呆</button>
+          <button type="button" class="pill" data-filter="workflow" aria-pressed="false">使用與管理</button>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="concepts">
+          <thead><tr><th style="width:22%">關鍵概念</th><th style="width:42%">官方規範與白話說明</th><th>教師備課實例／記憶點</th></tr></thead>
+          <tbody id="concepts-tbody">
+            <tr data-cat="trigger"><td>精準命名格式</td><td>全小寫英文字母＋連字號分隔，以動詞開頭；避免「小幫手、工具、資料」等籠統詞。</td><td><code class="good">draft-parent-weekly-note</code><br><span class="hint">優於 teacher-helper</span></td></tr>
+            <tr data-cat="trigger"><td>第三人稱與「使用時機：」</td><td>說明限 1,024 半形字元內；開頭用第三人稱陳述功能（不用「我／你」），並加上「使用時機：」列舉情境。</td><td>「整理單元重點並產出學習單。<strong>使用時機：</strong>教師提供課文或單元名稱需要備課時。」</td></tr>
+            <tr data-cat="instruction"><td>控制自由度</td><td>創意發想類給寬鬆指引；重視格式與準確度的任務則寫清楚逐步指令。</td><td>想班級破冰遊戲 → 高自由度；產出固定欄位段考審題表 → 低自由度。</td></tr>
+            <tr data-cat="instruction"><td>內建範本與檢查清單</td><td>直接貼上標題結構範例，複雜流程用 <code>[ ] 步驟 1</code> 幫助模型不漏項。</td><td>在技能內固定「班級／姓名／座號」與「暖身、實作、挑戰」三區塊。</td></tr>
+            <tr data-cat="instruction"><td>常見錯誤與缺漏處理</td><td>獨立列出禁區（如移除學生個資），並明講缺資料時「直接詢問，不要猜測」。</td><td>「若未提供年級，先詢問再出題；報告中不可出現學生全名與電話。」</td></tr>
+            <tr data-cat="workflow"><td>快速呼叫與多技能疊加</td><td>輸入 <code>@技能名稱</code> 直接呼叫，也能同時疊加多個技能與附加 PDF／圖片參考檔。</td><td>同時套用「溫和親師語氣」＋「聯絡簿週報格式」兩項技能。</td></tr>
+            <tr data-cat="workflow"><td>建立 vs. 略過原則</td><td>適合重複提示、常調格式、跨應用程式流程；一次性任務或常變規則建議略過。</td><td>每週要寫的週報 → 建 Skill；一年只寫一次的校慶致詞 → 直接對話即可。</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="ttl"><span class="kicker">避雷指南</span><h3>常見迷思與釐清（點卡片看正解）</h3></div>
+      <div class="myths">
+        <button type="button" class="myth" aria-expanded="false"><span class="q"><span>迷思 1：指令寫越長、塞越多講義內容越好？</span><span>看釐清</span></span><span class="a" hidden><strong>正確觀念：</strong>技能是一覽表而非手冊！過長的文字會稀釋重點，應保留核心步驟、格式與常見錯誤，長篇參考資料改用「附加檔案」讓 Gemini 需要時才開啟。</span></button>
+        <button type="button" class="myth" aria-expanded="false"><span class="q"><span>迷思 2：以前建好的 Gems 會全部消失嗎？</span><span>看釐清</span></span><span class="a" hidden><strong>正確觀念：</strong>不會白做工！Google 官方說明既有的 Gems 會在切換時自動遷移為 Skills（個人帳號 2026 年 11 月起、Workspace 教育版 2027 年 6 月）。</span></button>
+        <button type="button" class="myth" aria-expanded="false"><span class="q"><span>迷思 3：說明欄寫「你可以用這個幫我出題」可以嗎？</span><span>看釐清</span></span><span class="a" hidden><strong>正確觀念：</strong>Google 官方建議用<strong>第三人稱</strong>描述功能並加上「使用時機：」，避免第一人稱（我可以）或第二人稱（你可以），模型判斷觸發會更穩定。</span></button>
+        <button type="button" class="myth" aria-expanded="false"><span class="q"><span>迷思 4：可以把班級名單或帳號密碼寫進技能省事嗎？</span><span>看釐清</span></span><span class="a" hidden><strong>正確觀念：</strong>絕對不行！官方安全守則明訂切勿寫死密碼或 API Key，教師也應在「常見錯誤」區塊要求自動移除學生個人資料，確保隱私安全。</span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="ttl"><span class="kicker">課後快速檢核（3 題）</span><h3>測測看你掌握了幾個官方要訣！</h3></div>
+        <div class="no-print" style="display:flex;gap:12px;align-items:center"><span class="score" id="quiz-score">目前作答：0 / 3</span><button type="button" class="linkbtn" id="btn-reset-quiz">重設測驗</button></div>
+      </div>
+      <div id="quiz" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+
+    <div class="callout no-print">
+      <div><b>觀念都清楚了嗎？準備動手做！</b><span class="hint">切換到「Skill 實作學習單」，用內建的檢查器打造你的第一個教學 Skill。</span></div>
+      <button type="button" class="btn primary" id="btn-go-worksheet">前往實作學習單 →</button>
+    </div>
+  </section>
+
+  <!-- ==================== 頁面 3：Skill 實作學習單 ==================== -->
+  <section class="view" id="view-worksheet" role="tabpanel" aria-labelledby="vt-worksheet" hidden>
+    <div class="card">
+      <div class="card-head">
+        <div class="ttl"><span class="kicker">研習實作學習單</span><h3>Google Gemini 教師 Skill 建置實作單</h3><span class="sub">依序完成暖身、核心建置與延伸防呆，最後一鍵複製成品貼進 Gemini 使用。</span></div>
+        <label class="toggle no-print"><input type="checkbox" id="toggle-key">顯示講師參考解答與評量重點</label>
+      </div>
+      <div class="row">
+        <div class="field"><label for="ws-school">服務學校／社群</label><input id="ws-school" type="text" placeholder="例：自然科共備社群"></div>
+        <div class="field"><label for="ws-name">教師姓名</label><input id="ws-name" type="text" placeholder="請輸入姓名"></div>
+        <div class="field"><label for="ws-subject">任教年級／科目</label><input id="ws-subject" type="text" placeholder="例：國小五年級 自然"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h-num"><span class="num">一</span><h3>暖身觀察（基礎理解）：這些情境該不該建 Skill？</h3></div>
+      <p>請依據 Google 官方「建立 vs. 略過」原則，為以下 3 個教學情境做出判斷：</p>
+      <div id="warmup" style="display:flex;flex-direction:column;gap:10px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="h-num"><span class="num">二</span><h3>核心實作（概念應用）：打造你的第一個教學 Skill</h3></div>
+        <div class="presets no-print">
+          <button type="button" class="btn ghost small" data-preset="worksheet">套用範例：課堂學習單產生器</button>
+          <button type="button" class="btn ghost small" data-preset="parent">套用範例：親師週報整理師</button>
+          <button type="button" class="btn ghost small" data-preset="clear">清空重寫</button>
+        </div>
+      </div>
+      <div class="builder">
+        <div class="col">
+          <div class="field">
+            <div class="lbl-row"><label for="sk-name">1. 技能名稱（全小寫英文字母＋連字號，動詞開頭）</label><span class="badge" id="badge-name">待填寫</span></div>
+            <input id="sk-name" type="text" class="mono" placeholder="例：design-science-worksheet" autocomplete="off" spellcheck="false">
+            <span class="hint" id="hint-name">避免使用 helper、tool、data 等籠統詞彙。</span>
+          </div>
+          <div class="field">
+            <div class="lbl-row"><label for="sk-desc">2. 技能說明（第三人稱＋「使用時機：」，限 1,024 字元）</label><span class="hint" id="desc-count">0 / 1024</span></div>
+            <textarea id="sk-desc" rows="3" placeholder="例：將單元重點轉化為分層課堂學習單與教師解答。使用時機：教師提供單元名稱或課文，需要快速製作學習單時。"></textarea>
+            <div class="pills"><span class="badge" id="chk-trigger">含「使用時機：」</span><span class="badge" id="chk-third">第三人稱（無我／你）</span><span class="badge" id="chk-len">字元數合規</span></div>
+          </div>
+          <div class="field">
+            <label for="sk-freedom">3. 任務自由度設定</label>
+            <select id="sk-freedom">
+              <option value="適度彈性：固定段落骨架與評量架構，例子與提問可依學生程度彈性調整。">適度彈性（推薦用於一般教材與學習單）</option>
+              <option value="嚴格遵守：必須完全依照指定格式與步驟輸出，不可增減欄位。">低自由度／高度嚴謹（適合固定表格、審題或行政報表）</option>
+              <option value="創意優先：保留多元發想空間，每次提供 3 種不同角度的教學點子。">高自由度／創意優先（適合活動發想、破冰遊戲設計）</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sk-steps">4. 核心步驟與輸出範本</label>
+            <textarea id="sk-steps" rows="5" placeholder="請寫下 3～4 個步驟（可用 [ ] 檢查清單）與固定輸出標題……"></textarea>
+          </div>
+        </div>
+        <div class="col output">
+          <div class="out-head"><h3>即時預覽</h3><span class="hint">可直接貼入 Gemini 建立技能</span></div>
+          <pre class="prompt" id="skill-preview"></pre>
+          <div class="actions">
+            <button type="button" class="btn primary" id="btn-copy-skill">複製技能設定</button>
+            <a class="btn ghost" href="https://gemini.google.com" target="_blank" rel="noopener">開啟 Gemini</a>
+            <span class="status" id="skill-status" role="status"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="h-num"><span class="num">三</span><h3>延伸挑戰（高階思考）：防呆規則與多技能疊加</h3></div>
+      <p>填寫以下兩欄，會自動同步到上方「即時預覽」，讓你的技能更不容易出錯：</p>
+      <div class="builder">
+        <div class="field"><label for="sk-gotchas">常見錯誤與缺漏資訊處理規則</label><textarea id="sk-gotchas" rows="4" placeholder="例：若未提供年級請先詢問，不可自行猜測；移除所有學生姓名等個資；一律使用台灣繁體中文。"></textarea></div>
+        <div class="field"><label for="sk-stack">我的「多技能疊加」發想（選填）</label><textarea id="sk-stack" rows="4" placeholder="例：把這個技能與「溫和親師語氣技能」疊加，或附加「本校段考命題規範 PDF」作為參考檔案。"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card key" id="key-panel" hidden>
+      <div class="h-num"><span class="badge b-warn">講師專用</span><h3>教師用參考解答與評量重點</h3></div>
+      <div class="item"><b>第一題（暖身觀察）參考答案與常見誤答提醒</b>
+        <ul>
+          <li><strong>情境 A（每週將班級事項轉成固定格式親師週報）：</strong>建議建 Skill。符合「重複性高＋固定格式」。</li>
+          <li><strong>情境 B（替下週五一次性的校外教學寫一段 50 字提醒）：</strong>建議略過。屬於一次性工作，直接對話更省時。</li>
+          <li><strong>情境 C（每次段考後將班級錯題整理成分析並草擬家長信）：</strong>建議建 Skill。符合「重複流程＋跨連結應用程式」。</li>
+          <li><em>常見誤答：</em>學員常誤以為「只要重要就要建 Skill」，需提醒判斷核心是「是否重複且規則穩定」。</li>
+        </ul>
+      </div>
+      <div class="item"><b>第二題（核心實作）評量標準</b>能通過 4 項檢查：(1) 名稱全小寫英文字母加連字號、動詞開頭；(2) 說明採第三人稱且含「使用時機：」；(3) 說明未超過 1,024 半形字元；(4) 步驟包含具體輸出結構或檢查清單。</div>
+      <div class="item"><b>第三題（延伸挑戰）可接受思考方向</b>能具體寫出至少 1 項「缺漏資料時如何提問」與 1 項「隱私或用語禁區」（如不可輸出學生全名、不可混用簡體詞彙），並提出合理的雙技能疊加或 PDF 參考檔應用（如校本課程綱要、雙向細目表）。</div>
+    </div>
+  </section>
+
+  <footer class="sources" id="sources" hidden>
+    <b>官方參考來源（點擊查閱原文）：</b>
+    <ul>
+      <li><a href="https://support.google.com/gemini/answer/17102773?hl=zh-Hant" target="_blank" rel="noopener noreferrer">Google 說明中心：為 Gemini 系列應用程式編寫高效技能</a></li>
+      <li><a href="https://blog.google/products-and-platforms/products/gemini/automate-tasks-with-skills/" target="_blank" rel="noopener noreferrer">Google 官方部落格：Let skills in Gemini tackle your most repetitive tasks（2026/09/30）</a></li>
+      <li><a href="https://geminicli.com/docs/cli/skills-best-practices/" target="_blank" rel="noopener noreferrer">Gemini CLI 官方文件：Agent Skill Best Practices</a></li>
+    </ul>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var GRADES = ["一年級", "二年級", "三年級", "四年級", "五年級", "六年級"];
+  var SUBJECTS = ["國語", "數學", "社會", "自然", "英語", "生活", "健康", "綜合"];
+  var LINKS = {
+    gemini: ["開啟 Gemini", "https://gemini.google.com"],
+    notebook: ["開啟 NotebookLM", "https://notebooklm.google.com"],
+    canva: ["開啟 Canva", "https://www.canva.com"]
+  };
+
+  // 每科題型：[名稱, 預設題數, 單位, 給 AI 的出題說明]
+  var QTYPES = {
+    "國語": [
+      ["看注音寫國字", 5, "題", "每題給一個含注音的句子，請學生寫出國字"],
+      ["看國字寫注音", 5, "題", "每題給一個句子，標出要寫注音的字"],
+      ["改錯字", 5, "題", "每題一個句子，內含一個常見錯別字，請學生圈出並訂正"],
+      ["字音字形（多音字、形近字）", 0, "題", "以本課的多音字或形近字為主"],
+      ["詞語解釋", 0, "題", "選本課重要語詞，請學生寫出意思"],
+      ["選擇題", 0, "題", "四個選項，只有一個正確答案"],
+      ["照樣造句", 2, "題", "先給一個例句並標出句型，再給開頭讓學生仿寫"],
+      ["造句", 0, "題", "指定一個語詞，請學生造出完整句子"],
+      ["句型練習", 0, "題", "例如：因為……所以……、雖然……但是……，以本課句型為主"],
+      ["標點符號", 0, "題", "給一段缺少標點的文字，請學生填入"],
+      ["修辭判斷", 0, "題", "判斷句子使用的修辭（如譬喻、擬人、誇飾）"],
+      ["配對題", 0, "組", "左右兩欄配對，例如語詞配解釋"],
+      ["閱讀測驗", 1, "篇", "附一篇短文，後接 3～4 題理解提問"],
+      ["寫短文", 0, "篇", "給一個題目與寫作提示，並附評分重點"]
+    ],
+    "數學": [
+      ["選擇題", 4, "題", "四個選項，錯誤選項要對應常見的計算錯誤"],
+      ["填充題", 4, "題", ""],
+      ["計算題", 4, "題", "需寫出算式"],
+      ["應用題", 3, "題", "生活情境題，需寫出算式與答句"],
+      ["是非題", 0, "題", ""],
+      ["估算題", 0, "題", ""],
+      ["圖表判讀", 0, "題", "附表格或統計圖的文字描述，請學生判讀"],
+      ["作圖題", 0, "題", "例如畫出指定的圖形或在數線上標示"],
+      ["配對題", 0, "組", ""]
+    ],
+    "社會": [
+      ["選擇題", 5, "題", ""],
+      ["是非題", 5, "題", ""],
+      ["填充題", 0, "題", ""],
+      ["配對題", 1, "組", "例如人物配事件、地名配特色"],
+      ["時序排列", 0, "題", "請學生將事件依先後排序"],
+      ["地圖或圖表判讀", 0, "題", "附地圖或圖表的文字描述"],
+      ["情境題", 2, "題", "以生活情境考學生的判斷與應用"],
+      ["簡答題", 2, "題", ""]
+    ],
+    "自然": [
+      ["選擇題", 5, "題", ""],
+      ["是非題", 4, "題", ""],
+      ["填充題", 0, "題", ""],
+      ["配對題", 0, "組", ""],
+      ["實驗步驟排序", 1, "題", ""],
+      ["圖表判讀", 1, "題", "附實驗紀錄表或圖表的文字描述"],
+      ["實驗設計題", 0, "題", "請學生說明要改變、要控制的變因"],
+      ["生活應用題", 2, "題", ""],
+      ["簡答題", 0, "題", ""]
+    ],
+    "英語": [
+      ["看圖選字", 5, "題", "以文字描述圖片內容"],
+      ["單字填空", 5, "題", ""],
+      ["字母或單字聽寫", 0, "題", "列出題目與要唸給學生聽的內容"],
+      ["選擇題", 0, "題", ""],
+      ["句型重組", 3, "題", "打散句子的單字，請學生排出正確句子"],
+      ["配對題", 0, "組", "例如單字配中文、問句配答句"],
+      ["改錯題", 0, "題", ""],
+      ["照樣造句", 0, "題", "以本課句型為主"],
+      ["閱讀測驗", 0, "篇", "短文後接 3 題理解提問"]
+    ],
+    "生活": [
+      ["選擇題", 4, "題", ""],
+      ["是非題", 4, "題", ""],
+      ["連連看", 1, "組", ""],
+      ["看圖回答", 2, "題", "以文字描述圖片內容"],
+      ["畫畫表達", 0, "題", "請學生用畫圖表達想法"],
+      ["簡答題", 0, "題", ""]
+    ],
+    "健康": [
+      ["選擇題", 5, "題", ""],
+      ["是非題", 5, "題", ""],
+      ["配對題", 0, "組", ""],
+      ["情境判斷題", 2, "題", "描述一個生活情境，請學生判斷怎麼做才正確"],
+      ["簡答題", 0, "題", ""]
+    ],
+    "綜合": [
+      ["選擇題", 4, "題", ""],
+      ["是非題", 4, "題", ""],
+      ["情境題", 2, "題", ""],
+      ["簡答題", 0, "題", ""],
+      ["省思寫作", 1, "篇", "請學生寫下自己的想法或改變"]
+    ]
+  };
+
+  var SAMPLE_COMMENTS ="1. 你是班上的開心果，總能用笑容感染身邊的同學。這學期你主動幫忙整理圖書角，老師都看在眼裡。希望下學期你寫作業時也能像整理書櫃一樣細心，相信你會更棒！\n2. 你做事認真負責，擔任排長從不缺席。上課發言時，你的想法常讓大家眼睛一亮。期待你多給自己一點信心，勇敢在全班面前分享。\n3. 你的跳繩從一開始的十下進步到一百下，這份堅持讓老師好感動。下學期，希望你把這股毅力也用在數學練習上，一步一步來，你一定做得到！";
+
+  var SCENES = [
+    {
+      id: "quiz", name: "出考題", tool: "gemini",
+      desc: "依單元內容出一份小考，可指定題型、題數與難度。",
+      fields: [
+        { id: "grade", type: "select", label: "年級", options: GRADES, value: "四年級", half: true },
+        { id: "subject", type: "select", label: "科目", options: SUBJECTS, value: "國語", half: true },
+        { id: "unit", type: "text", label: "單元或課名", value: "第五課　大自然的美妙", hint: "下方提示詞最後會留一個位置，讓你貼上課文或重點。" },
+        { id: "qtypes", type: "qtypes", label: "題型與題數" },
+        { id: "otherTypes", type: "text", label: "其他題型（可留空）", value: "", hint: "清單裡沒有的題型寫在這裡，例如：成語填空 3 題、短語接寫 2 題。" },
+        { id: "images", type: "select", label: "需要看圖的題目怎麼處理", options: ["在最後產生生圖提示詞（依題號排成網格圖）", "標示放圖位置並描述圖片，我再自己找圖", "我會上傳圖片，請根據圖片出題", "不要出需要看圖的題目"], value: "在最後產生生圖提示詞（依題號排成網格圖）", hint: "AI 出題時只會產生文字，不會附上圖片。選第一種時，它會在最後給你可以貼到 Gemini 產生圖片的提示詞。" },
+        { id: "imgPer", type: "select", label: "每張圖放幾格", options: ["4 格（2×2）", "6 格（2×3）", "9 格（3×3）"], value: "6 格（2×3）", half: true },
+        { id: "imgStyle", type: "select", label: "圖片風格", options: ["黑白線條插畫（適合影印）", "簡單彩色卡通插畫", "寫實風格插畫"], value: "黑白線條插畫（適合影印）", half: true },
+        { id: "level", type: "select", label: "難度", options: ["以基礎為主", "基礎與進階各半", "多一些挑戰題", "分成 A、B 兩卷（A 卷一般、B 卷較易）"], value: "基礎與進階各半" },
+        { id: "extras", type: "checks", label: "附加內容", items: ["附答案", "附評分重點", "附雙向細目表", "選擇題錯誤選項要有誘答力", "題目貼近學生生活情境"], value: ["附答案", "附評分重點", "選擇題錯誤選項要有誘答力"] },
+        { id: "more", type: "textarea", label: "其他要求（可留空）", value: "", hint: "例如：避免出現注音、數字不超過萬位。" }
+      ],
+      build: function (v) {
+        var parts = v.qtypes.filter(function (q) { return q[1] > 0; }).map(function (q) { return "・" + q[0] + " " + q[1] + " " + q[2] + (q[3] ? "：" + q[3] : ""); });
+        if (v.otherTypes.trim()) parts.push("・" + v.otherTypes.trim());
+        var L = [];
+        L.push("你是一位資深的國小" + v.grade + v.subject + "老師。");
+        L.push("請根據下方提供的「" + (v.unit || "【單元名稱】") + "」內容，出一份小考，包含以下大題：");
+        L.push(parts.length ? parts.join("\n") : "・【請選擇題型與題數】");
+        L.push("請依上面的順序排列大題，並標上大題名稱與題號。");
+        L.push("");
+        L.push("難度：" + v.level + "。");
+        L.push("用字與句型要符合國小" + v.grade + "學生的程度。");
+        v.extras.forEach(function (e) {
+          if (e === "附答案") L.push("請在考卷最後另外列出答案。");
+          else if (e === "附評分重點") L.push("需要學生寫句子或寫算式的題目，請附上評分重點。");
+          else if (e === "附雙向細目表") L.push("最後用表格做一份雙向細目表（題號、對應學習內容、認知層次：記憶／理解／應用）。");
+          else if (e === "選擇題錯誤選項要有誘答力") { if (v.qtypes.some(function (q) { return q[0].indexOf("選") >= 0 && q[1] > 0; })) L.push(e + "。"); }
+          else L.push(e + "。");
+        });
+        if (v.more.trim()) L.push(v.more.trim());
+        L.push("");
+        if (v.images === "我會上傳圖片，請根據圖片出題") {
+          L.push("我會一併上傳圖片（課本插圖、照片或圖表）。需要看圖的題目，請只根據我上傳的圖片出題，並在題目中註明「見第幾張圖」。");
+        } else if (v.images === "不要出需要看圖的題目") {
+          L.push("請不要出需要看圖才能作答的題目。需要圖表的內容，請改用文字或表格呈現。");
+        } else if (v.images === "在最後產生生圖提示詞（依題號排成網格圖）") {
+          var per = parseInt(v.imgPer, 10) || 6;
+          var gridTxt = v.imgPer.replace(/^.*（|）$/g, "");
+          L.push("需要看圖的題目，請在題目中用〔圖 題號〕標出放圖的位置，題號寫法為「大題-小題」，例如〔圖 3-2〕表示第三大題第 2 題。");
+          L.push("");
+          L.push("出完題目後，請另外整理一個區塊，標題為「圖片生成提示詞」：");
+          L.push("・把所有需要的圖片排成網格圖，每張最多 " + per + " 格（" + gridTxt + "）。超過就分成第 1 張、第 2 張……，每張各寫一段完整、可以單獨使用的提示詞。");
+          L.push("・每段提示詞用「請生成一張圖片：」開頭，逐格寫出位置（例如：第一列左格）、題號與畫面內容，描述要具體（有什麼物品、數量、動作）。");
+          L.push("・每格左上角只標題號（例如 3-2），圖中不要出現其他文字。");
+          L.push("・風格：" + v.imgStyle + "，白色背景，畫面簡單清楚，格與格之間用細線分隔並留白，方便剪下貼到考卷上。");
+          L.push("・數學圖形、統計圖、地圖這類需要精確數字或標示的圖，不要放進生圖提示詞，改列在「需老師自行製作的圖」清單，並提供製圖需要的數據。");
+          L.push("・最後附一張對照表：第幾張圖、格子位置、題號、圖片內容。");
+          L.push("若沒有任何題目需要圖片，請說明「本份考卷不需要圖片」即可。");
+        } else {
+          L.push("需要看圖的題目，請在題目中用〔圖：……〕標出放圖的位置，並具體描述圖片內容（畫面中有什麼、數量、圖上要標的文字或數字），方便我之後找圖或製作。統計圖請另外用表格列出數據。最後把所有需要的圖整理成一份清單。");
+        }
+        L.push("");
+        L.push("【在這裡貼上課文或單元重點】");
+        if (v.images === "我會上傳圖片，請根據圖片出題") L.push("【上傳圖片】");
+        return L.join("\n");
+      },
+      tips: ["不滿意就追問，例如「第 3 題太難，換一題」。", "插圖類的圖片（動物、物品、情境）可以請 Gemini 或 Canva 依〔圖：〕的描述生成。數學圖形、統計圖和地圖的數字與標示容易出錯，建議用課本圖、Google 試算表或自己畫。", "AI 給的答案一定要自己再核對一次，數學題請親自算過。"]
+    },
+    {
+      id: "review", name: "協助審題", tool: "gemini",
+      desc: "把考卷交給 AI 當第二雙眼睛，找出錯字、題意不清與答案問題。",
+      fields: [
+        { id: "grade", type: "select", label: "年級", options: GRADES, value: "三年級", half: true },
+        { id: "subject", type: "select", label: "科目", options: SUBJECTS, value: "數學", half: true },
+        { id: "checks", type: "checks", label: "請它檢查", items: ["答案是否正確", "是否只有一個正確答案", "題意是否清楚", "錯字與標點", "選擇題錯誤選項是否合理", "難度是否符合年級", "用字是否超出年級程度", "記憶／理解／應用的配分是否平衡"], value: ["答案是否正確", "是否只有一個正確答案", "題意是否清楚", "錯字與標點", "選擇題錯誤選項是否合理", "難度是否符合年級"] },
+        { id: "format", type: "select", label: "回覆方式", options: ["用表格列出：題號、問題、修改建議", "直接給我修改後的完整考卷，並標出改了哪裡", "先列出問題，再給修改後的考卷"], value: "用表格列出：題號、問題、修改建議" },
+        { id: "source", type: "select", label: "考卷會怎麼提供", options: ["貼上文字", "上傳照片或 PDF"], value: "上傳照片或 PDF" }
+      ],
+      build: function (v) {
+        var L = [];
+        L.push("請以資深國小" + v.grade + v.subject + "老師的角度，審查我" + (v.source === "貼上文字" ? "貼在下方" : "上傳") + "的考卷，逐題檢查：");
+        v.checks.forEach(function (c, i) { L.push((i + 1) + ". " + c); });
+        L.push("");
+        L.push("回覆方式：" + v.format + "。");
+        L.push("沒有問題的題目不必列出。如果你不確定某題是否有問題，請標註「需老師確認」，不要直接判定為錯誤。");
+        L.push("");
+        L.push(v.source === "貼上文字" ? "【在這裡貼上考卷文字】" : "【上傳考卷照片或 PDF】");
+        return L.join("\n");
+      },
+      tips: ["AI 也可能誤判，最後由老師決定要不要改。", "照片請拍正、拍清楚，一頁一張辨識效果較好。"]
+    },
+    {
+      id: "gem", name: "建立評語技能", tool: "gemini",
+      desc: "產生「評語小幫手」的設定內容。可以建成 Gemini 的「技能（Skill）」，學校帳號還沒有技能功能時，也可以建成 Gem。只需設定一次。",
+      fields: [
+        { id: "platform", type: "select", label: "要建立成", options: ["技能（Skill）", "Gem"], value: "技能（Skill）", half: true },
+        { id: "skillName", type: "text", label: "技能名稱（英文）", value: "wang-comments", half: true, hint: "只用英文小寫字母、數字和連字號，例如 wang-comments。之後輸入「@」加這個名稱就能使用。" },
+        { id: "teacher", type: "text", label: "怎麼稱呼你", value: "王老師", half: true },
+        { id: "grade", type: "select", label: "任教年級", options: GRADES, value: "三年級", half: true },
+        { id: "len", type: "select", label: "每則字數", options: ["50～80 字", "80～120 字", "120～150 字", "150～200 字"], value: "80～120 字", half: true },
+        { id: "call", type: "select", label: "評語中稱呼學生", options: ["你", "小朋友", "孩子", "○○（名字由我之後填入）"], value: "你", half: true },
+        { id: "tone", type: "checks", label: "語氣", items: ["溫暖", "正向鼓勵", "具體", "活潑", "幽默", "穩重"], value: ["溫暖", "正向鼓勵", "具體"] },
+        { id: "structure", type: "select", label: "段落結構", options: ["先寫優點，再寫一項期許", "先寫具體事例，再寫優點，最後寫期許", "先寫進步的地方，再寫優點與期許"], value: "先寫優點，再寫一項期許" },
+        { id: "avoid", type: "checks", label: "請它避免", items: ["提到成績或排名", "用「但是」轉折批評", "堆砌成語", "提到家庭狀況", "每則開頭都一樣", "空泛的形容詞"], value: ["提到成績或排名", "用「但是」轉折批評", "提到家庭狀況", "每則開頭都一樣"] },
+        { id: "versions", type: "select", label: "每次給幾個版本", options: ["1 個", "2 個", "3 個"], value: "2 個", half: true },
+        { id: "samples", type: "textarea", label: "我的評語範例（最重要）", value: SAMPLE_COMMENTS, rows: 8, hint: "貼上 3～10 則自己寫過的評語，刪去學生姓名。目前是示範用的模擬評語，請換成你自己的。" }
+      ],
+      build: function (v) {
+        var L = [];
+        var isSkill = v.platform !== "Gem";
+        if (isSkill) {
+          L.push("━━ 名稱（貼到「名稱」欄）━━");
+          L.push(skillSlug(v.skillName));
+          L.push("");
+          L.push("━━ 說明（貼到「說明」欄）━━");
+          L.push("當我要寫學期評語、或給你學生座號與特質關鍵詞時使用。依照" + v.teacher + "的文筆風格，為國小" + v.grade + "學生撰寫學期評語。");
+          L.push("");
+          L.push("━━ 指示（貼到「指示」欄）━━");
+        }
+        L.push("你是" + v.teacher + "的學期評語助理。" + v.teacher + "是國小" + v.grade + "導師。");
+        L.push("");
+        L.push("■ 你的工作");
+        L.push("我會給你學生的座號和幾個關鍵詞（個性、表現、進步、需要加油的地方），請依照我的風格寫學期評語。");
+        L.push("");
+        L.push("■ 寫作規則");
+        L.push("・每則約 " + v.len + "。");
+        L.push("・評語中稱呼學生為「" + v.call + "」。");
+        if (v.tone.length) L.push("・語氣：" + v.tone.join("、") + "。");
+        L.push("・結構：" + v.structure + "。");
+        L.push("・用詞要讓" + v.grade + "的學生和家長都看得懂。");
+        if (v.avoid.length) L.push("・避免：" + v.avoid.join("、") + "。");
+        L.push("・只使用我提供的關鍵詞，不要自行編造學生沒有的事蹟。");
+        L.push("・每位學生給我 " + v.versions.replace(" 個", "") + " 個版本，讓我挑選。");
+        L.push("・一次有多位學生時，用表格呈現：座號、評語" + (v.versions !== "1 個" ? "（各版本分欄）" : "") + "。");
+        L.push("");
+        L.push("■ 模仿我的文筆");
+        L.push("下面是我過去寫的評語。請仔細模仿它們的用詞、句子長短、語氣和常用的句型，讓新寫的評語讀起來像我本人寫的。");
+        L.push("");
+        L.push(v.samples.trim() || "【貼上 3～10 則自己寫過的評語，刪去學生姓名】");
+        return L.join("\n");
+      },
+      tips: function (v) {
+        var first = v.platform === "Gem"
+          ? ["在 Gemini 左側選單找到「Gem」，新增 Gem 後把這段貼進「指示」欄。", "Gem 將逐步改為技能：學校帳號預計 2027 年 6 月轉換，届時會自動搬移成技能。"]
+          : ["在 Gemini 進入「自訂（Customize）」→「技能」→「建立」→「手動建立」，把上面三段分別貼到名稱、說明、指示欄。", "使用時在對話框輸入「@" + skillSlug(v.skillName) + "」再加上內容。", "找不到「技能」時，代表學校帳號還沒開放，請先把上方「要建立成」改選 Gem。"];
+        return first.concat(["範例越多、越像你平常寫的，產出就越像你。", "之後寫得滿意的評語，也可以補進範例裡。", "想自己設計其他技能（學習單、親師週報…），可以看上方「Skill 重點講義」與「Skill 實作學習單」。"]);
+      }
+    },
+    {
+      id: "comment", name: "產出評語", tool: "gemini",
+      desc: "整理學生關鍵詞，交給已建立好的評語技能或 Gem，一次產出多位學生的評語。",
+      fields: [
+        { id: "via", type: "select", label: "你的評語小幫手是", options: ["技能（Skill）", "Gem"], value: "技能（Skill）", half: true },
+        { id: "skillName", type: "text", label: "技能名稱", value: "wang-comments", half: true, hint: "和建立技能時取的名稱一樣。選 Gem 時不用填。" },
+        { id: "list", type: "textarea", label: "學生關鍵詞（一行一位）", rows: 7, value: "3 號：熱心助人、上課常分心、跳繩進步很多\n7 號：安靜細心、字很工整、希望多舉手發言\n12 號：班級幹部負責、數學進步、偶爾和同學起口角\n18 號：愛看書、作文有創意、整理抽屜要加油", hint: "格式：座號：關鍵詞。只寫特質與表現，不寫姓名。" },
+        { id: "event", type: "text", label: "本學期班上的共同經驗（可留空）", value: "校慶大隊接力、戶外教學到動物園", hint: "AI 會在適合的學生評語中自然帶入。" },
+        { id: "adjust", type: "checks", label: "這次的額外要求", items: ["字數比平常短一點", "語氣再輕鬆一點", "期許的部分寫得更具體", "每則結尾加一句祝福"], value: [] }
+      ],
+      build: function (v) {
+        var lines = v.list.split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+        var L = [];
+        L.push((v.via === "Gem" ? "" : "@" + skillSlug(v.skillName) + " ") + "請依照你的寫作規則，為下面 " + lines.length + " 位學生各寫一則學期評語：");
+        L.push("");
+        L.push(lines.length ? lines.join("\n") : "【座號：關鍵詞，一行一位】");
+        if (v.event.trim()) {
+          L.push("");
+          L.push("本學期班上的共同經驗：" + v.event.trim() + "。適合的話可以自然帶入，不必每則都寫。");
+        }
+        if (v.adjust.length) {
+          L.push("");
+          L.push("這次另外請你：" + v.adjust.join("、") + "。");
+        }
+        return L.join("\n");
+      },
+      tips: ["技能：開一個新對話，直接貼上這段（開頭的「@名稱」會叫出你的技能）。Gem：請先打開你的評語 Gem 再貼上。", "一次 5～10 位學生效果最好，人數太多時請分批。", "每則評語都要讀過再修改，確認內容符合學生實際狀況。"]
+    },
+    {
+      id: "notebook", name: "NotebookLM 整理教材", tool: "notebook",
+      desc: "上傳講義或課文後，請 NotebookLM 只根據資料整理學習材料。",
+      fields: [
+        { id: "grade", type: "select", label: "給哪個年級", options: GRADES, value: "四年級", half: true },
+        { id: "purpose", type: "select", label: "要做什麼", options: ["複習重點", "學習單", "是非題自我檢測", "名詞解釋表", "親師座談家長問答", "上課用的提問"], value: "學習單", half: true },
+        { id: "count", type: "number", label: "題數或條數", value: 8, half: true },
+        { id: "style", type: "checks", label: "呈現方式", items: ["條列式", "用表格", "附答案", "標出資料出處", "加入生活例子"], value: ["條列式", "附答案"] },
+        { id: "more", type: "textarea", label: "其他要求（可留空）", value: "", hint: "例如：最後一題請設計成開放式問題。" }
+      ],
+      build: function (v) {
+        var L = [];
+        var audience = v.purpose === "親師座談家長問答" ? "家長" : "國小" + v.grade + "學生";
+        L.push("請只根據我上傳的資料，為" + audience + "製作一份「" + v.purpose + "」，共約 " + v.count + (v.purpose === "名詞解釋表" || v.purpose === "複習重點" ? " 條" : " 題") + "。");
+        L.push("用字要符合" + audience + "能理解的程度。");
+        if (v.style.length) L.push("呈現方式：" + v.style.join("、") + "。");
+        L.push("資料中沒有提到的內容，請不要自行補充。");
+        if (v.more.trim()) L.push(v.more.trim());
+        return L.join("\n");
+      },
+      tips: ["先在 NotebookLM 新增筆記本，並上傳講義、課文 PDF 或 Google 文件，再貼上這段。", "想要聲音版本，可以在右側工作室使用「語音摘要」。"]
+    },
+    {
+      id: "canva", name: "Canva 班級素材", tool: "canva",
+      desc: "給 Canva AI 的設計描述，用來產生公告、海報或獎狀。",
+      fields: [
+        { id: "kind", type: "select", label: "要做什麼", options: ["班級公告", "活動海報", "獎狀", "班規海報", "值日生表", "教室布置標語"], value: "班級公告", half: true },
+        { id: "grade", type: "select", label: "給哪個年級", options: GRADES, value: "三年級", half: true },
+        { id: "topic", type: "text", label: "主題", value: "寒假作業繳交提醒" },
+        { id: "text", type: "textarea", label: "一定要出現的文字", rows: 3, value: "開學第一天（2 月 11 日）請繳交：寒假作業本、閱讀心得、春聯作品" },
+        { id: "style", type: "select", label: "風格", options: ["活潑可愛", "清新簡約", "溫暖手繪", "節慶喜氣", "自然綠意"], value: "活潑可愛", half: true },
+        { id: "size", type: "select", label: "尺寸", options: ["A4 直式", "A4 橫式", "正方形社群貼文", "簡報 16:9"], value: "A4 直式", half: true }
+      ],
+      build: function (v) {
+        var L = [];
+        L.push("請設計一張給國小" + v.grade + "的「" + v.kind + "」，主題是「" + (v.topic || "【主題】") + "」。");
+        L.push("風格：" + v.style + "，色彩明亮、文字清楚好讀。尺寸：" + v.size + "。");
+        L.push("一定要出現的文字：" + (v.text.trim() || "【要出現的文字】"));
+        L.push("請使用繁體中文，版面留白充足，適合張貼在教室或傳到班級群組。");
+        return L.join("\n");
+      },
+      tips: ["在 Canva 首頁的 AI 輸入框（Magic Design）貼上這段描述。", "產生後中文字可能有誤，請逐字檢查再列印。", "做全班獎狀時，可以用「大量建立」一次套入所有座號或名字。"]
+    }
+  ];
+
+  var STORE_KEY = "teacher-prompt-tool-v1";
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}") || {}; } catch (e) { saved = {}; }
+  function persist() { try { localStorage.setItem(STORE_KEY, JSON.stringify(saved)); } catch (e) {} }
+
+  var tabsEl = document.getElementById("tabs");
+  var formEl = document.getElementById("form");
+  var promptEl = document.getElementById("prompt");
+  var countEl = document.getElementById("count");
+  var tipsEl = document.getElementById("tips");
+  var openEl = document.getElementById("open");
+  var statusEl = document.getElementById("status");
+  var current = SCENES[0];
+  if (saved._scene) { SCENES.forEach(function (s) { if (s.id === saved._scene) current = s; }); }
+
+  function skillSlug(s) { var t = String(s || "").toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""); return t || "my-comments"; }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function stateFor(scene) {
+    var st = saved[scene.id] || {};
+    var v = {};
+    scene.fields.forEach(function (f) {
+      if (f.type === "qtypes") {
+        var subj = QTYPES[v.subject] ? v.subject : "國語";
+        var mem = st.qtypes && !Array.isArray(st.qtypes) && st.qtypes[subj] ? st.qtypes[subj] : {};
+        v[f.id] = QTYPES[subj].map(function (it) { var n = mem[it[0]] != null ? mem[it[0]] : it[1]; return [it[0], n, it[2], it[3]]; });
+        v._qsubj = subj;
+      } else if (st[f.id] !== undefined) { v[f.id] = st[f.id]; }
+      else { v[f.id] = Array.isArray(f.value) ? f.value.slice() : f.value; }
+    });
+    return v;
+  }
+
+  function renderTabs() {
+    tabsEl.innerHTML = SCENES.map(function (s, i) {
+      return '<button class="tab" role="tab" type="button" id="tab-' + s.id + '" aria-selected="' + (s === current) + '" data-id="' + s.id + '"><span class="n">' + (i + 1) + '</span>' + esc(s.name) + '</button>';
+    }).join("");
+  }
+
+  function renderForm() {
+    var v = stateFor(current);
+    var html = '<h2>' + esc(current.name) + '</h2><p class="desc">' + esc(current.desc) + '</p>';
+    var halfBuf = [];
+    function flushHalf() { if (halfBuf.length) { html += '<div class="row">' + halfBuf.join("") + '</div>'; halfBuf = []; } }
+    current.fields.forEach(function (f) {
+      var fid = current.id + "-" + f.id;
+      var h = "";
+      if (f.type === "select") {
+        h = '<div class="field"><label for="' + fid + '">' + esc(f.label) + '</label><select id="' + fid + '" data-f="' + f.id + '">' +
+          f.options.map(function (o) { return '<option' + (o === v[f.id] ? " selected" : "") + '>' + esc(o) + '</option>'; }).join("") + '</select></div>';
+      } else if (f.type === "text" || f.type === "number") {
+        h = '<div class="field"><label for="' + fid + '">' + esc(f.label) + '</label><input id="' + fid + '" type="' + f.type + '"' + (f.type === "number" ? ' min="1" max="50"' : "") + ' data-f="' + f.id + '" value="' + esc(v[f.id]) + '">' + (f.hint ? '<span class="hint">' + esc(f.hint) + '</span>' : "") + '</div>';
+      } else if (f.type === "textarea") {
+        h = '<div class="field"><label for="' + fid + '">' + esc(f.label) + '</label><textarea id="' + fid + '" rows="' + (f.rows || 3) + '" data-f="' + f.id + '">' + esc(v[f.id]) + '</textarea>' + (f.hint ? '<span class="hint">' + esc(f.hint) + '</span>' : "") + '</div>';
+      } else if (f.type === "checks") {
+        h = '<div class="field"><span class="lbl">' + esc(f.label) + '</span><div class="checks">' + f.items.map(function (it, i) {
+          return '<label class="check"><input type="checkbox" id="' + fid + "-" + i + '" data-f="' + f.id + '" value="' + esc(it) + '"' + (v[f.id].indexOf(it) >= 0 ? " checked" : "") + '>' + esc(it) + '</label>';
+        }).join("") + '</div></div>';
+      } else if (f.type === "qtypes") {
+        h = '<div class="field"><span class="lbl">' + esc(f.label) + '</span><div class="qtypes">' + v[f.id].map(function (q, i) {
+          return '<label class="qtype" for="' + fid + "-" + i + '"><span>' + esc(q[0]) + ' <span class="hint">（' + esc(q[2]) + '）</span></span><input type="number" min="0" max="30" id="' + fid + "-" + i + '" data-f="' + f.id + '" data-i="' + i + '" data-subj="' + esc(v._qsubj) + '" value="' + q[1] + '"></label>';
+        }).join("") + '</div><span class="hint">目前顯示「' + esc(v._qsubj) + '」的題型，換科目會自動換成該科的題型。不需要的題型填 0。</span></div>';
+      }
+      if (f.half) { halfBuf.push(h); } else { flushHalf(); html += h; }
+    });
+    flushHalf();
+    formEl.innerHTML = html;
+  }
+
+  function readForm() {
+    var v = stateFor(current);
+    current.fields.forEach(function (f) {
+      if (f.type === "checks") {
+        v[f.id] = Array.prototype.slice.call(formEl.querySelectorAll('input[data-f="' + f.id + '"]:checked')).map(function (el) { return el.value; });
+      } else if (f.type === "qtypes") {
+        var subj = QTYPES[v.subject] ? v.subject : "國語";
+        var mem = (saved[current.id] && saved[current.id].qtypes && !Array.isArray(saved[current.id].qtypes) && saved[current.id].qtypes[subj]) || {};
+        v[f.id] = QTYPES[subj].map(function (it) { var n = mem[it[0]] != null ? mem[it[0]] : it[1]; return [it[0], n, it[2], it[3]]; });
+        v._qsubj = subj;
+        formEl.querySelectorAll('input[data-f="' + f.id + '"]').forEach(function (el) {
+          if (el.dataset.subj !== subj) return;
+          var n = parseInt(el.value, 10); v[f.id][+el.dataset.i][1] = isNaN(n) || n < 0 ? 0 : n;
+        });
+      } else {
+        var el = formEl.querySelector('[data-f="' + f.id + '"]');
+        if (el) v[f.id] = f.type === "number" ? (parseInt(el.value, 10) || 1) : el.value;
+      }
+    });
+    return v;
+  }
+
+  function update() {
+    var v = readForm();
+    var store = {};
+    Object.keys(v).forEach(function (k) {
+      if (k === "_qsubj") return;
+      if (k === "qtypes") {
+        var prev = saved[current.id] && saved[current.id].qtypes;
+        var all = prev && !Array.isArray(prev) ? prev : {};
+        var mine = {}; v.qtypes.forEach(function (q) { mine[q[0]] = q[1]; });
+        all[v._qsubj] = mine; store.qtypes = all;
+      } else { store[k] = v[k]; }
+    });
+    saved[current.id] = store; saved._scene = current.id; persist();
+    var text = current.build(v);
+    promptEl.innerHTML = esc(text).replace(/【[^】]*】/g, function (m) { return "<mark>" + m + "</mark>"; });
+    promptEl.dataset.raw = text;
+    countEl.textContent = "約 " + text.replace(/\s/g, "").length + " 字";
+    var link = LINKS[current.tool];
+    openEl.textContent = link[0]; openEl.href = link[1];
+    tipsEl.innerHTML = (typeof current.tips === "function" ? current.tips(v) : current.tips).map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+    statusEl.textContent = "";
+  }
+
+  tabsEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".tab"); if (!b) return;
+    SCENES.forEach(function (s) { if (s.id === b.dataset.id) current = s; });
+    renderTabs(); renderForm(); update();
+  });
+  formEl.addEventListener("input", update);
+  formEl.addEventListener("change", function (e) {
+    update();
+    if (e.target && e.target.dataset && e.target.dataset.f === "subject" && current.id === "quiz") {
+      var focusId = e.target.id; renderForm(); update();
+      var el = document.getElementById(focusId); if (el) el.focus();
+    }
+  });
+
+  document.getElementById("copy").addEventListener("click", function () {
+    var text = promptEl.dataset.raw || promptEl.textContent;
+    function selectFallback() {
+      var r = document.createRange(); r.selectNodeContents(promptEl);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      statusEl.textContent = "已選取，請按 Ctrl+C（Mac 為 ⌘+C）複製";
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () { statusEl.textContent = "已複製，可以貼上了"; }, selectFallback);
+    } catch (err) { selectFallback(); }
+  });
+
+  renderTabs(); renderForm(); update();
+})();
+</script>
+
+<script>
+/* 上方大分頁＋Skill 講義與實作學習單（2026-11-23 由 google_gemini_skill.html 併入） */
+(function () {
+  var VIEW_KEY = "teacher-prompt-tool-view";
+  var views = ["notes", "worksheet", "prompt"];
+  var vtabs = document.querySelectorAll(".vtab");
+  var printBtn = document.getElementById("btn-print");
+  var sources = document.getElementById("sources");
+
+  function showView(name, scroll) {
+    if (views.indexOf(name) < 0) name = "notes";
+    vtabs.forEach(function (b) { b.setAttribute("aria-selected", String(b.dataset.view === name)); });
+    views.forEach(function (v) { document.getElementById("view-" + v).hidden = v !== name; });
+    printBtn.hidden = name === "prompt";
+    sources.hidden = name === "prompt";
+    try { localStorage.setItem(VIEW_KEY, name); } catch (e) {}
+    if (scroll) window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  vtabs.forEach(function (b) { b.addEventListener("click", function () { showView(b.dataset.view, false); }); });
+  document.getElementById("btn-go-worksheet").addEventListener("click", function () { showView("worksheet", true); });
+  printBtn.addEventListener("click", function () { window.print(); });
+  var startView = "notes";
+  try { startView = localStorage.getItem(VIEW_KEY) || "notes"; } catch (e) {}
+  showView(startView, false);
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  // ---------- 三階段載入 ----------
+  var stageText = [
+    "<strong>教學白話比喻（階段 1）：</strong>就像老師的檔案櫃標籤！Gemini 平常只看抽屜外面的「標籤（名稱與說明）」，如果標籤寫得太籠統（例如「教學小幫手」），Gemini 就不知道什麼時候該拉開這個抽屜。",
+    "<strong>教學白話比喻（階段 2）：</strong>確認找對抽屜後，Gemini 才拿出裡面的「一覽表」照步驟做。指令保持精簡、有清楚範本與檢查清單，執行最準確。",
+    "<strong>教學白話比喻（階段 3）：</strong>如果這項工作需要對照「校本課綱 PDF」或「評分規準表」，Gemini 只會在需要比對的那一步才翻開附件，既省時間又不佔記憶體。"
+  ];
+  var stageCards = document.querySelectorAll(".stage");
+  var stageDetail = document.getElementById("stage-detail");
+  stageDetail.innerHTML = stageText[0];
+  stageCards.forEach(function (card) {
+    card.addEventListener("click", function () {
+      stageCards.forEach(function (c) { c.setAttribute("data-active", "false"); });
+      card.setAttribute("data-active", "true");
+      stageDetail.innerHTML = stageText[+card.dataset.stage];
+    });
+  });
+
+  // ---------- 概念表篩選 ----------
+  var pills = document.querySelectorAll(".pill[data-filter]");
+  var rows = document.querySelectorAll("#concepts-tbody tr");
+  pills.forEach(function (p) {
+    p.addEventListener("click", function () {
+      var cat = p.dataset.filter;
+      pills.forEach(function (x) { x.setAttribute("aria-pressed", String(x === p)); });
+      rows.forEach(function (r) { r.hidden = !(cat === "all" || r.dataset.cat === cat); });
+    });
+  });
+
+  // ---------- 迷思卡 ----------
+  document.querySelectorAll(".myth").forEach(function (card) {
+    card.addEventListener("click", function () {
+      var open = card.getAttribute("aria-expanded") === "true";
+      card.setAttribute("aria-expanded", String(!open));
+      card.querySelector(".a").hidden = open;
+      card.querySelector(".q span:last-child").textContent = open ? "看釐清" : "收合";
+    });
+  });
+
+  // ---------- 快速檢核 ----------
+  var quiz = [
+    { level: "基礎題", q: "依照 Google 官方規範，下列哪一個「技能名稱」最合適？",
+      opts: ["teacher-helper-data", "create-reading-worksheet", "My_New_Skill"], ans: 1,
+      exp: "官方建議使用全小寫英文字母並以連字號分隔，且以動詞開頭聚焦用途，避免 helper、data 等籠統字詞。" },
+    { level: "應用題", q: "撰寫技能「說明（Description）」時，下列哪種寫法最能讓 Gemini 準確自動觸發？",
+      opts: ["「我可以幫你整理上課筆記，你隨時都可以用這個功能來省時間。」", "「將課文重點整理為表格與隨堂題。使用時機：教師提供單元課文或簡報，需要製作課堂筆記時。」", "「教學用技能，很好用。」"], ans: 1,
+      exp: "官方建議以第三人稱陳述功能（不用「我／你」），並加上「使用時機：」列舉具體適用情境，控制在 1,024 半形字元內。" },
+    { level: "思考題", q: "如果老師忘記輸入「目標年級」，卻希望 Gemini 不要自己亂猜出題難度，應該在技能中加入什麼？",
+      opts: ["把 1 到 12 年級的課綱全文都直接貼進指令裡。", "明確寫出「缺漏資訊處理規則」：若未提供年級請先詢問，不要自行猜測。", "改用 Gems 就不會遇到這個問題。"], ans: 1,
+      exp: "在指令中明確告知 Gemini 缺少資訊時「先詢問、不猜測」，能有效避免模型自行編造或產出不符年級的題目。" }
+  ];
+  var picks = {};
+  var quizEl = document.getElementById("quiz");
+  var scoreEl = document.getElementById("quiz-score");
+  function renderQuiz() {
+    var done = 0, right = 0;
+    quizEl.innerHTML = quiz.map(function (it, qi) {
+      var p = picks[qi];
+      if (p !== undefined) { done++; if (p === it.ans) right++; }
+      var opts = it.opts.map(function (o, oi) {
+        var cls = "opt";
+        if (p !== undefined) cls += oi === it.ans ? " is-ok" : (oi === p ? " is-bad" : " is-dim");
+        return '<button type="button" class="' + cls + '" data-q="' + qi + '" data-o="' + oi + '">' + esc(o) + "</button>";
+      }).join("");
+      var fb = p === undefined ? "" : '<div class="fb ' + (p === it.ans ? "ok" : "warn") + '"><strong>' + (p === it.ans ? "答對了！" : "再想想看：") + "</strong>" + esc(it.exp) + "</div>";
+      return '<div class="qitem"><div class="qt"><span class="lv">' + it.level + "</span>" + (qi + 1) + ". " + esc(it.q) + "</div>" + opts + fb + "</div>";
+    }).join("");
+    scoreEl.textContent = done === quiz.length ? "完成！答對 " + right + " / " + quiz.length + " 題" : "目前作答：" + done + " / " + quiz.length;
+  }
+  quizEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b) return;
+    picks[+b.dataset.q] = +b.dataset.o; renderQuiz();
+  });
+  document.getElementById("btn-reset-quiz").addEventListener("click", function () { picks = {}; renderQuiz(); });
+  renderQuiz();
+
+  // ---------- 學習單一：暖身觀察 ----------
+  var warm = [
+    { text: "情境 A：每週五都要把本週班級活動、作業提醒與親師叮嚀，整理成固定格式的聯絡簿週報。", ans: "build", reason: "每週重複且格式固定，非常適合建立 Skill，以後每週貼上條列事項就能一秒產出。" },
+    { text: "情境 B：替下週五一次性的校外教學，寫一段 50 字的雨具攜帶提醒。", ans: "skip", reason: "屬於一次性簡單任務，直接跟 Gemini 對話即可，不需要額外花時間建 Skill。" },
+    { text: "情境 C：每次段考後都要依固定欄位彙整班級錯題分析，並草擬寄給家長的學習回饋信。", ans: "build", reason: "屬於定期重複、重視格式且跨檔案／信件的工作流程，很適合做成 Skill。" }
+  ];
+  var warmPick = {};
+  var warmEl = document.getElementById("warmup");
+  function renderWarm() {
+    warmEl.innerHTML = warm.map(function (sc, i) {
+      var p = warmPick[i];
+      var btns = [["build", "建議建 Skill"], ["skip", "建議略過"]].map(function (b) {
+        var cls = "choice" + (p === b[0] ? (p === sc.ans ? " is-ok" : " is-bad") : "");
+        return '<button type="button" class="' + cls + '" data-i="' + i + '" data-v="' + b[0] + '">' + b[1] + "</button>";
+      }).join("");
+      var res = p ? '<p class="res ' + (p === sc.ans ? "ok" : "warn") + '"><strong>' + (p === sc.ans ? "判斷正確：" : "參考解析：") + "</strong>" + esc(sc.reason) + "</p>" : "";
+      return '<div class="warm"><div class="top"><p>' + esc(sc.text) + '</p><div class="btns no-print">' + btns + "</div></div>" + res + "</div>";
+    }).join("");
+  }
+  warmEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".choice"); if (!b) return;
+    warmPick[+b.dataset.i] = b.dataset.v; renderWarm();
+  });
+  renderWarm();
+
+  // ---------- 學習單二、三：技能建置器 ----------
+  var $ = function (id) { return document.getElementById(id); };
+  var skName = $("sk-name"), skDesc = $("sk-desc"), skFreedom = $("sk-freedom"), skSteps = $("sk-steps"), skGotchas = $("sk-gotchas"), skStack = $("sk-stack");
+  var preview = $("skill-preview"), skStatus = $("skill-status");
+  var presets = {
+    worksheet: {
+      name: "design-class-worksheet",
+      desc: "將單元主題或課文整理為分層課堂學習單與教師參考解答。使用時機：教師提供年級、學科與單元名稱，需要快速產出可直接列印的學習單時。",
+      freedom: "適度彈性：固定段落骨架與評量架構，例子與提問可依學生程度彈性調整。",
+      steps: "[ ] 步驟 1：確認年級、學科與學習目標\n[ ] 步驟 2：產出「一、暖身觀察」「二、核心實作」「三、延伸挑戰」三層題目\n[ ] 步驟 3：附上「教師用參考解答與常見誤答提醒」\n輸出格式：包含班級／姓名／座號欄位，標題清楚方便直接複製列印。",
+      gotchas: "1. 若未提供目標年級，先詢問再開始出題，不可自行猜測。\n2. 全文使用台灣繁體中文與在地教學用語（學習單、試題）。\n3. 切勿憑空編造科學數據或課綱條文。",
+      stack: "可附加「本校自然科評量規準 PDF」，或與「生活情境舉例技能」疊加使用。"
+    },
+    parent: {
+      name: "draft-parent-weekly-note",
+      desc: "將教師條列的班級事項轉換為語氣溫和、條理分明的親師聯絡簿週報。使用時機：每週五整理班級活動、作業提醒與親師配合事項時。",
+      freedom: "嚴格遵守：必須完全依照指定格式與步驟輸出，不可增減欄位。",
+      steps: "[ ] 步驟 1：將輸入事項分類為「本週學習亮點」「下週重要行事」「親師配合提醒」\n[ ] 步驟 2：每項重點控制在 2 句以內，方便家長手機閱讀\n[ ] 步驟 3：結尾加上簡短溫暖的週末祝福",
+      gotchas: "1. 移除所有個別學生姓名、座號或聯絡電話等個資。\n2. 若缺少活動日期或截止時間，直接向教師確認，不可自行填寫。\n3. 總字數控制在 350 字以內。",
+      stack: "可與「班級經營溫暖語氣技能」疊加，維持整學期一致的親師溝通風格。"
+    },
+    clear: { name: "", desc: "", freedom: "適度彈性：固定段落骨架與評量架構，例子與提問可依學生程度彈性調整。", steps: "", gotchas: "", stack: "" }
+  };
+  function setBadge(el, state, text) { el.className = "badge" + (state ? " b-" + state : ""); if (text) el.textContent = text; }
+  function setHint(el, state, text) { el.className = "hint" + (state ? " " + state : ""); el.textContent = text; }
+
+  function updateBuilder() {
+    var n = skName.value.trim(), d = skDesc.value.trim(), st = skSteps.value.trim(), g = skGotchas.value.trim(), sk = skStack.value.trim();
+    var bn = $("badge-name"), hn = $("hint-name");
+    var vague = ["helper", "tool", "tools", "data"].some(function (w) { return n.split("-").indexOf(w) >= 0; });
+    if (!n) { setBadge(bn, "", "待填寫"); setHint(hn, "", "避免使用 helper、tool、data 等籠統詞彙。"); }
+    else if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(n)) { setBadge(bn, "bad", "格式需修正"); setHint(hn, "bad", "請使用全小寫英文字母、數字與連字號（-），不可含空白、底線或中文。"); }
+    else if (vague) { setBadge(bn, "warn", "建議更具體"); setHint(hn, "warn", "偵測到較籠統字詞（helper/tool/data），建議改以具體動作動詞命名。"); }
+    else { setBadge(bn, "ok", "符合官方規範"); setHint(hn, "ok", "命名清晰且符合全小寫＋連字號格式！"); }
+
+    var len = d.length, dc = $("desc-count");
+    dc.textContent = len + " / 1024"; dc.className = "hint" + (len > 1024 ? " bad" : "");
+    var on = len > 0;
+    setBadge($("chk-trigger"), on ? (d.indexOf("使用時機") >= 0 || d.toLowerCase().indexOf("use when") >= 0 ? "ok" : "warn") : "");
+    setBadge($("chk-third"), on ? (/我可以|你可以|幫你|為你/.test(d) ? "warn" : "ok") : "");
+    setBadge($("chk-len"), on ? (len <= 1024 ? "ok" : "bad") : "");
+
+    var L = ["---", "name: " + (n || "my-teaching-skill"), "description: " + (d || "（請填寫第三人稱功能說明，並加上「使用時機：...」）"), "---", "",
+      "# " + (n || "my-teaching-skill"), "", "## 執行自由度", skFreedom.value, "", "## 核心步驟與輸出範本", st || "（請填寫操作步驟或檢查清單）", "",
+      "## 常見錯誤與缺漏資訊處理", g || "（若缺少關鍵資訊，請先詢問教師，不要自行猜測）"];
+    if (sk) L.push("", "## 延伸應用（多技能疊加／參考檔案）", sk);
+    preview.textContent = L.join("\n");
+    skStatus.textContent = "";
+  }
+  [skName, skDesc, skFreedom, skSteps, skGotchas, skStack].forEach(function (el) { el.addEventListener("input", updateBuilder); el.addEventListener("change", updateBuilder); });
+
+  function applyPreset(key) {
+    var p = presets[key]; if (!p) return;
+    skName.value = p.name; skDesc.value = p.desc; skFreedom.value = p.freedom; skSteps.value = p.steps; skGotchas.value = p.gotchas; skStack.value = p.stack;
+    updateBuilder();
+  }
+  document.querySelectorAll("[data-preset]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      applyPreset(b.dataset.preset);
+      skStatus.textContent = b.dataset.preset === "clear" ? "已清空欄位，可以開始自由填寫" : "已載入範例，可以直接微調";
+    });
+  });
+  applyPreset("worksheet");
+
+  $("btn-copy-skill").addEventListener("click", function () {
+    var text = preview.textContent;
+    function selectFallback() {
+      var r = document.createRange(); r.selectNodeContents(preview);
+      var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+      skStatus.textContent = "已選取，請按 Ctrl+C（Mac 為 ⌘+C）複製";
+    }
+    try { navigator.clipboard.writeText(text).then(function () { skStatus.textContent = "已複製，可以貼進 Gemini 了"; }, selectFallback); }
+    catch (err) { selectFallback(); }
+  });
+
+  // ---------- 講師解答 ----------
+  $("toggle-key").addEventListener("change", function (e) { $("key-panel").hidden = !e.target.checked; });
+})();
+</script>
+
+</body></html>
